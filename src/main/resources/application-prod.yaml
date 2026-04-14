@@ -1,0 +1,33 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+application:
+  security:
+    jwt:
+      secret-key: ${JWT_SECRET_KEY}
+      expiration: 900000
+      refresh-token:
+        expiration: 604800000
+
+app:
+  security:
+    require-https: true
+
+server:
+  forward-headers-strategy: native
+
+management:
+  server:
+    port: 8081
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+

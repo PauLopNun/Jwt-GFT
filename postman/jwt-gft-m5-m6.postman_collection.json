@@ -1,0 +1,468 @@
+{
+  "info": {
+    "name": "jwt-gft M5-M6 smoke",
+    "description": "Coleccion para validar auth JWT y autorizacion (modulos 5 y 6).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "9a4a8fb2-3347-4e46-8b6b-c07469c20c42"
+  },
+  "item": [
+    {
+      "name": "01 Register USER",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\",\n  \"role\": \"ROLE_USER\"\n}"
+        },
+        "url": "{{baseUrl}}/api/auth/register"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('201 Created', function () { pm.response.to.have.status(201); });",
+              "var json = pm.response.json();",
+              "pm.collectionVariables.set('userToken', json.accessToken);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 Register ADMIN",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\",\n  \"role\": \"ROLE_ADMIN\"\n}"
+        },
+        "url": "{{baseUrl}}/api/auth/register"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('201 Created', function () { pm.response.to.have.status(201); });",
+              "var json = pm.response.json();",
+              "pm.collectionVariables.set('adminToken', json.accessToken);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 Login USER",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/auth/login"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('200 OK', function () { pm.response.to.have.status(200); });",
+              "var json = pm.response.json();",
+              "pm.test('Contract JWT', function () {",
+              "  pm.expect(json).to.have.property('accessToken');",
+              "  pm.expect(json).to.have.property('tokenType', 'Bearer');",
+              "  pm.expect(json).to.have.property('expiresIn');",
+              "});",
+              "pm.collectionVariables.set('userToken', json.accessToken);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 Login ADMIN",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/auth/login"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('200 OK', function () { pm.response.to.have.status(200); });",
+              "var json = pm.response.json();",
+              "pm.collectionVariables.set('adminToken', json.accessToken);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 GET books (public)",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/books"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('200 OK', function () { pm.response.to.have.status(200); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 POST books without token (unauthorized)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Domain-Driven Design\",\n  \"author\": \"Eric Evans\",\n  \"isbn\": \"978-0321125217\",\n  \"price\": 42.50,\n  \"stock\": 4\n}"
+        },
+        "url": "{{baseUrl}}/api/books"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('401 Unauthorized', function () { pm.response.to.have.status(401); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 POST books with ADMIN (created)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Architecture Patterns\",\n  \"author\": \"Mark Richards\",\n  \"isbn\": \"978-1492052203\",\n  \"price\": 38.00,\n  \"stock\": 5\n}"
+        },
+        "url": "{{baseUrl}}/api/books"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('201 Created', function () { pm.response.to.have.status(201); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 GET admin/users with USER (forbidden)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{userToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/admin/users"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('403 Forbidden', function () { pm.response.to.have.status(403); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 GET admin/users with ADMIN (ok)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/admin/users"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('200 OK', function () { pm.response.to.have.status(200); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 POST order with USER",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{userToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"bookId\": 1\n}"
+        },
+        "url": "{{baseUrl}}/api/orders"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('201 Created', function () { pm.response.to.have.status(201); });",
+              "var json = pm.response.json();",
+              "pm.collectionVariables.set('orderId', json.id);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 GET own order with USER",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{userToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/orders/{{orderId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('200 OK', function () { pm.response.to.have.status(200); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 Register OTHER user",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{otherEmail}}\",\n  \"password\": \"{{otherPassword}}\",\n  \"role\": \"ROLE_USER\"\n}"
+        },
+        "url": "{{baseUrl}}/api/auth/register"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('201 Created', function () { pm.response.to.have.status(201); });",
+              "var json = pm.response.json();",
+              "pm.collectionVariables.set('otherToken', json.accessToken);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "13 GET foreign order with OTHER (forbidden)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{otherToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/orders/{{orderId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('403 Forbidden', function () { pm.response.to.have.status(403); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "14 Cancel order with OWNER",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{userToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/orders/{{orderId}}/cancel"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('200 OK', function () { pm.response.to.have.status(200); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "15 Cancel again (bad request)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{userToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/orders/{{orderId}}/cancel"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('400 Bad Request', function () { pm.response.to.have.status(400); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "userEmail",
+      "value": "postman.user@bookstore.dev"
+    },
+    {
+      "key": "userPassword",
+      "value": "Password123!"
+    },
+    {
+      "key": "adminEmail",
+      "value": "postman.admin@bookstore.dev"
+    },
+    {
+      "key": "adminPassword",
+      "value": "Admin123!"
+    },
+    {
+      "key": "otherEmail",
+      "value": "postman.other@bookstore.dev"
+    },
+    {
+      "key": "otherPassword",
+      "value": "Other123!"
+    },
+    {
+      "key": "userToken",
+      "value": ""
+    },
+    {
+      "key": "adminToken",
+      "value": ""
+    },
+    {
+      "key": "otherToken",
+      "value": ""
+    },
+    {
+      "key": "orderId",
+      "value": ""
+    }
+  ]
+}
+
